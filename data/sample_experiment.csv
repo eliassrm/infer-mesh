@@ -1,0 +1,4 @@
+timestamp,node_id,rssi_dbm,noise_dbm,tx_rate_mbps,rx_rate_mbps,latency_ms,packet_loss,batman_tq,next_hop,throughput_mbps,event_label
+2026-05-27T10:00:00Z,shg3060,-51,-95,144.4,130.0,4.2,0.00,255,shg3000,42.1,baseline
+2026-05-27T10:00:05Z,shg3060,-63,-94,86.7,78.0,8.9,0.02,221,shg3000,31.4,degradation
+2026-05-27T10:00:10Z,shg3060,-72,-93,43.3,39.0,24.7,0.11,173,tl-wr841nd,18.8,degradation

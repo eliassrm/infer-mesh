@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net" modified="2026-05-27T00:00:00.000Z" agent="INFER-MESH" version="22.1.0">
+  <diagram id="infer-mesh-topology" name="Topology">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="controller" value="Laptop controller&#xa;Ansible / experiments" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="70" y="70" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="collector" value="WD300 collector&#xa;MongoDB gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="430" y="70" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="shg3060" value="SHG3060&#xa;Mesh node A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="160" y="240" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="shg3000" value="SHG3000&#xa;Mesh node B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="470" y="240" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="tplink" value="TL-WR841ND&#xa;Legacy edge node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="315" y="380" width="155" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="shg2500" value="SHG2500&#xa;Degradation node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="635" y="380" width="155" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="control-link" value="management" style="endArrow=block;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="controller" target="collector">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="control-nodes" value="SSH / Ansible" style="endArrow=block;html=1;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="controller" target="shg3060">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="telemetry" value="telemetry" style="endArrow=block;html=1;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="shg3000" target="collector">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="mesh-a-b" value="802.11s / batman-adv" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" parent="1" source="shg3060" target="shg3000">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="mesh-a-c" value="mesh" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" parent="1" source="shg3060" target="tplink">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="mesh-b-c" value="mesh" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" parent="1" source="shg3000" target="tplink">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="degrade-link" value="controlled load / weak link" style="endArrow=block;html=1;strokeColor=#b85450;dashed=1;" edge="1" parent="1" source="shg2500" target="tplink">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

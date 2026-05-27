@@ -1,0 +1,92 @@
+---
+- name: Install telemetry collectors on mesh nodes
+  hosts: telemetry_nodes
+  gather_facts: false
+  vars:
+    telemetry_dir: /usr/lib/infer-mesh
+    telemetry_spool_dir: /tmp/infer-mesh
+    telemetry_interval: "*/1"
+    telemetry_scripts:
+      - collect_iw_metrics.py
+      - collect_batman_metrics.py
+      - latency_probe.py
+      - route_churn_logger.py
+
+  pre_tasks:
+    - name: Confirm required telemetry variables
+      ansible.builtin.assert:
+        that:
+          - mesh_interface is defined
+          - bat_interface is defined
+          - probe_target is defined
+
+    - name: Install Python and telemetry command dependencies
+      ansible.builtin.raw: |
+        set -eu
+        opkg update
+        opkg install python3-light iw batctl
+      register: telemetry_packages
+      changed_when: "'Installing' in telemetry_packages.stdout"
+
+  tasks:
+    - name: Create agent and volatile spool directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ telemetry_dir }}"
+        - "{{ telemetry_spool_dir }}"
+
+    - name: Deploy telemetry collectors
+      ansible.builtin.copy:
+        src: "../scripts/{{ item }}"
+        dest: "{{ telemetry_dir }}/{{ item }}"
+        mode: "0755"
+      loop: "{{ telemetry_scripts }}"
+
+    - name: Schedule radio, routing, and latency observations
+      ansible.builtin.blockinfile:
+        path: /etc/crontabs/root
+        create: true
+        mode: "0600"
+        marker: "# {mark} INFER-MESH TELEMETRY"
+        block: |
+          {{ telemetry_interval }} * * * * python3 {{ telemetry_dir }}/collect_iw_metrics.py --node-id {{ inventory_hostname }} --interface {{ mesh_interface }} --format json >> {{ telemetry_spool_dir }}/iw.jsonl 2>> {{ telemetry_spool_dir }}/agent.err
+          {{ telemetry_interval }} * * * * python3 {{ telemetry_dir }}/collect_batman_metrics.py --node-id {{ inventory_hostname }} --mesh-interface {{ bat_interface }} --format json >> {{ telemetry_spool_dir }}/batman.jsonl 2>> {{ telemetry_spool_dir }}/agent.err
+          {{ telemetry_interval }} * * * * python3 {{ telemetry_dir }}/latency_probe.py --node-id {{ inventory_hostname }} --target {{ probe_target }} --format json >> {{ telemetry_spool_dir }}/latency.jsonl 2>> {{ telemetry_spool_dir }}/agent.err
+      notify: Restart cron
+
+  handlers:
+    - name: Restart cron
+      ansible.builtin.raw: /etc/init.d/cron restart
+
+- name: Install controller-side experiment utilities on collector
+  hosts: collectors
+  gather_facts: false
+  vars:
+    telemetry_dir: /usr/lib/infer-mesh
+
+  tasks:
+    - name: Install Python and iperf client package
+      ansible.builtin.raw: |
+        set -eu
+        opkg update
+        opkg install python3-light iperf3
+      register: collector_packages
+      changed_when: "'Installing' in collector_packages.stdout"
+
+    - name: Create collector utility directory
+      ansible.builtin.file:
+        path: "{{ telemetry_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Deploy throughput and export utilities
+      ansible.builtin.copy:
+        src: "../scripts/{{ item }}"
+        dest: "{{ telemetry_dir }}/{{ item }}"
+        mode: "0755"
+      loop:
+        - iperf_sweep.py
+        - mongo_export.py

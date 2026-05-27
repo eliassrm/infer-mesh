@@ -1,0 +1,79 @@
+---
+- name: Configure the INFER-MESH OpenWrt mesh
+  hosts: mesh_nodes
+  gather_facts: false
+  vars:
+    openwrt_mesh_packages:
+      - kmod-batman-adv
+      - batctl
+      - iw
+      - wpad-mesh-mbedtls
+
+  pre_tasks:
+    - name: Require reviewed device-specific mesh settings
+      ansible.builtin.assert:
+        that:
+          - mesh_radio is defined
+          - "'REPLACE' not in mesh_radio"
+          - bat_ip is defined
+          - mesh_key is defined
+          - mesh_key | default('') | length >= 16
+        fail_msg: >-
+          Set a verified radio identifier and provide a mesh_key of at least
+          16 characters, preferably through Ansible Vault or --extra-vars.
+
+    - name: Verify the target is an OpenWrt device
+      ansible.builtin.raw: test -f /etc/openwrt_release
+      changed_when: false
+
+  tasks:
+    - name: Install mesh routing and wireless packages
+      ansible.builtin.raw: |
+        set -eu
+        opkg update
+        {% for package in openwrt_mesh_packages %}
+        opkg install {{ package | quote }}
+        {% endfor %}
+      register: mesh_packages
+      changed_when: "'Installing' in mesh_packages.stdout"
+
+    - name: Configure 802.11s and batman-adv interfaces
+      ansible.builtin.raw: |
+        set -eu
+        uci -q delete wireless.infer_mesh || true
+        uci set wireless.infer_mesh='wifi-iface'
+        uci set wireless.infer_mesh.device='{{ mesh_radio }}'
+        uci set wireless.infer_mesh.ifname='{{ mesh_interface }}'
+        uci set wireless.infer_mesh.mode='mesh'
+        uci set wireless.infer_mesh.mesh_id='{{ mesh_name }}'
+        uci set wireless.infer_mesh.network='batmesh'
+        uci set wireless.infer_mesh.encryption='{{ mesh_encryption }}'
+        uci set wireless.infer_mesh.key='{{ mesh_key }}'
+
+        uci set wireless.{{ mesh_radio }}.channel='{{ mesh_channel }}'
+        uci set wireless.{{ mesh_radio }}.htmode='{{ mesh_htmode }}'
+        uci set wireless.{{ mesh_radio }}.country='{{ mesh_country }}'
+        uci set wireless.{{ mesh_radio }}.disabled='0'
+
+        uci -q delete network.batmesh || true
+        uci set network.batmesh='interface'
+        uci set network.batmesh.proto='batadv_hardif'
+        uci set network.batmesh.master='{{ bat_interface }}'
+
+        uci -q delete network.{{ bat_interface }} || true
+        uci set network.{{ bat_interface }}='interface'
+        uci set network.{{ bat_interface }}.proto='batadv'
+        uci set network.{{ bat_interface }}.routing_algo='BATMAN_IV'
+        uci set network.{{ bat_interface }}.bridge_loop_avoidance='1'
+        uci set network.{{ bat_interface }}.ipaddr='{{ bat_ip }}'
+        uci set network.{{ bat_interface }}.netmask='255.255.255.0'
+
+        uci commit wireless
+        uci commit network
+      notify: Reload OpenWrt network
+
+  handlers:
+    - name: Reload OpenWrt network
+      ansible.builtin.raw: |
+        wifi reload
+        /etc/init.d/network reload
