@@ -11,6 +11,30 @@
       - collect_batman_metrics.py
       - latency_probe.py
       - route_churn_logger.py
+    telemetry_iw_cron: >-
+      {{ telemetry_interval }} * * * * python3
+      {{ telemetry_dir }}/collect_iw_metrics.py
+      --node-id {{ inventory_hostname }}
+      --interface {{ mesh_interface }}
+      --format json
+      >> {{ telemetry_spool_dir }}/iw.jsonl
+      2>> {{ telemetry_spool_dir }}/agent.err
+    telemetry_batman_cron: >-
+      {{ telemetry_interval }} * * * * python3
+      {{ telemetry_dir }}/collect_batman_metrics.py
+      --node-id {{ inventory_hostname }}
+      --mesh-interface {{ bat_interface }}
+      --format json
+      >> {{ telemetry_spool_dir }}/batman.jsonl
+      2>> {{ telemetry_spool_dir }}/agent.err
+    telemetry_latency_cron: >-
+      {{ telemetry_interval }} * * * * python3
+      {{ telemetry_dir }}/latency_probe.py
+      --node-id {{ inventory_hostname }}
+      --target {{ probe_target }}
+      --format json
+      >> {{ telemetry_spool_dir }}/latency.jsonl
+      2>> {{ telemetry_spool_dir }}/agent.err
 
   pre_tasks:
     - name: Confirm required telemetry variables
@@ -52,9 +76,9 @@
         mode: "0600"
         marker: "# {mark} INFER-MESH TELEMETRY"
         block: |
-          {{ telemetry_interval }} * * * * python3 {{ telemetry_dir }}/collect_iw_metrics.py --node-id {{ inventory_hostname }} --interface {{ mesh_interface }} --format json >> {{ telemetry_spool_dir }}/iw.jsonl 2>> {{ telemetry_spool_dir }}/agent.err
-          {{ telemetry_interval }} * * * * python3 {{ telemetry_dir }}/collect_batman_metrics.py --node-id {{ inventory_hostname }} --mesh-interface {{ bat_interface }} --format json >> {{ telemetry_spool_dir }}/batman.jsonl 2>> {{ telemetry_spool_dir }}/agent.err
-          {{ telemetry_interval }} * * * * python3 {{ telemetry_dir }}/latency_probe.py --node-id {{ inventory_hostname }} --target {{ probe_target }} --format json >> {{ telemetry_spool_dir }}/latency.jsonl 2>> {{ telemetry_spool_dir }}/agent.err
+          {{ telemetry_iw_cron }}
+          {{ telemetry_batman_cron }}
+          {{ telemetry_latency_cron }}
       notify: Restart cron
 
   handlers:
