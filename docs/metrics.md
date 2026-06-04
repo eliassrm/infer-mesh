@@ -6,6 +6,15 @@ All telemetry uses UTC ISO 8601 timestamps and stable `node_id` values from the 
 Measurements should also carry `experiment_id`, policy mode, and event label in stored records,
 even when a lightweight CSV export omits those fields during initial testing.
 
+`scripts/telemetry_ingest.py` promotes collector CSV/JSONL files into the canonical
+`infer-mesh.telemetry.v1` JSONL schema. It merges run metadata, validates event labels and
+numeric fields, writes invalid records separately, generates an ingest manifest, and can sign or
+verify records with an HMAC secret supplied through an environment variable.
+
+Run-level quality checks are implemented in `scripts/quality_checks.py` and are also run during
+ingestion. Current invalidation controls cover clock skew, missing sample gaps, probe health,
+and empty runs.
+
 ## Core Metrics
 
 | Metric | Unit | Source | Interpretation |

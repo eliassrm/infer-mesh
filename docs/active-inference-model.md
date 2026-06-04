@@ -58,8 +58,8 @@ Where:
 - `action_cost(pi)` avoids needless channel, power, or path changes that themselves create
   instability.
 
-An implementation can begin with documented weighted terms before implementing a learned
-probabilistic model:
+The starter implementation in `scripts/policy_engine.py` uses documented weighted terms before
+a learned probabilistic model is available:
 
 ```text
 score(a) = w_loss * predicted_loss
@@ -76,6 +76,11 @@ score(a) = w_loss * predicted_loss
 3. Score only actions allowed by the experiment configuration.
 4. Apply one action, log its score and reason, and wait for an evaluation window.
 5. Compare observations to predictions and record outcome.
+
+`scripts/experiment_orchestrator.py` runs this loop when a scenario uses
+`"policy_mode": "adaptive"`. The orchestrator writes policy decisions as `policy_decision`
+records and applies configured policy commands only when `--execute` is supplied and the
+scenario approval token matches.
 
 ## Evaluation
 

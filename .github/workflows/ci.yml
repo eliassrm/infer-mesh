@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile scripts and tests
+        run: python -m compileall scripts tests
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+      - name: Smoke test telemetry ingestion
+        run: >
+          python scripts/telemetry_ingest.py
+          --metadata data/run-metadata.example.json
+          --input data/sample_experiment.csv
+          --output-dir /tmp/infer-mesh-runs
+      - name: Smoke test paired analysis
+        run: >
+          python scripts/paired_analysis.py
+          --static data/sample_experiment.csv
+          --adaptive data/sample_experiment.csv
+          --output /tmp/infer-mesh-results.md
+          --json-output /tmp/infer-mesh-results.json
+
+  ansible:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Ansible tooling
+        run: python -m pip install ansible ansible-lint
+      - name: Syntax check playbooks
+        run: |
+          ansible-playbook --syntax-check -i ansible/inventory.ini ansible/openwrt-mesh.yml
+          ansible-playbook --syntax-check -i ansible/inventory.ini ansible/telemetry-agent.yml
+          ansible-playbook --syntax-check -i ansible/inventory.ini ansible/degradation-actions.yml
+      - name: Lint playbooks
+        run: ansible-lint ansible/*.yml

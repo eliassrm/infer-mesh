@@ -90,3 +90,15 @@
       loop:
         - iperf_sweep.py
         - mongo_export.py
+        - telemetry_ingest.py
+        - quality_checks.py
+        - policy_engine.py
+        - paired_analysis.py
+        - experiment_orchestrator.py
+
+    - name: Deploy shared Python package for controller utilities
+      ansible.builtin.copy:
+        src: "../scripts/infer_mesh/"
+        dest: "{{ telemetry_dir }}/infer_mesh/"
+        mode: "0644"
+        directory_mode: "0755"

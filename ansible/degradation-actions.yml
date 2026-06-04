@@ -1,0 +1,45 @@
+---
+- name: Apply guarded INFER-MESH degradation actions
+  hosts: degradation_nodes
+  gather_facts: false
+  vars:
+    degradation_action: inspect
+    degradation_interface: bat0
+    degradation_loss_percent: 10
+    degradation_confirm: ""
+    experiment_id: ""
+
+  pre_tasks:
+    - name: Require explicit lab confirmation for degradation actions
+      ansible.builtin.assert:
+        that:
+          - experiment_id | length > 0
+          - degradation_confirm == experiment_id
+          - degradation_action in ['inspect', 'start_loss', 'clear_loss']
+          - degradation_loss_percent | int >= 1
+          - degradation_loss_percent | int <= 30
+        fail_msg: >-
+          Set experiment_id and repeat the same value in degradation_confirm.
+          Only inspect, start_loss, and clear_loss are supported by this guarded playbook.
+
+  tasks:
+    - name: Inspect current qdisc state
+      ansible.builtin.raw: "tc qdisc show dev {{ degradation_interface | quote }}"
+      register: qdisc_state
+      changed_when: false
+      when: degradation_action == 'inspect'
+
+    - name: Start bounded packet-loss degradation
+      ansible.builtin.raw: >-
+        tc qdisc replace dev {{ degradation_interface | quote }}
+        root netem loss {{ degradation_loss_percent | int }}%
+      register: start_loss
+      changed_when: start_loss.rc == 0
+      when: degradation_action == 'start_loss'
+
+    - name: Clear packet-loss degradation
+      ansible.builtin.raw: "tc qdisc del dev {{ degradation_interface | quote }} root"
+      register: clear_loss
+      changed_when: clear_loss.rc == 0
+      failed_when: clear_loss.rc not in [0, 2]
+      when: degradation_action == 'clear_loss'

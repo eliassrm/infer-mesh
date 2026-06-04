@@ -1,0 +1,21 @@
+{
+  "experiment_id": "example-baseline-001",
+  "scenario": "stable_baseline",
+  "policy_mode": "static",
+  "topology_revision": "lab-topology-v1",
+  "operator": "controller",
+  "expected_interval_s": 5,
+  "event_label": "baseline",
+  "nodes": [
+    "shg3060",
+    "shg3000",
+    "tl-wr841nd"
+  ],
+  "quality_thresholds": {
+    "max_clock_skew_ms": 500,
+    "max_gap_multiplier": 3,
+    "max_missing_gap_rate": 0.05,
+    "max_probe_error_rate": 0.1
+  }
+}
+

@@ -1,0 +1,75 @@
+{
+  "experiment_id": "mobility-interference-replay-001",
+  "scenario": "mobility_interference_replay",
+  "policy_mode": "adaptive",
+  "topology_revision": "lab-topology-v1",
+  "operator": "controller",
+  "expected_interval_s": 5,
+  "allowed_interventions": [
+    "start_replay",
+    "stop_replay"
+  ],
+  "allowed_policy_actions": [
+    "keep_state",
+    "reduce_test_load",
+    "prefer_stronger_path",
+    "restore_defaults"
+  ],
+  "safety": {
+    "approval_token": "REPLACE_WITH_RUN_APPROVAL_TOKEN"
+  },
+  "collectors": [
+    {
+      "name": "latency",
+      "command": [
+        "python",
+        "scripts/latency_probe.py",
+        "--node-id",
+        "controller",
+        "--target",
+        "10.10.0.12",
+        "--ping-style",
+        "windows",
+        "--format",
+        "json"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "label": "baseline",
+      "duration_s": 300
+    },
+    {
+      "label": "degradation",
+      "duration_s": 300,
+      "interventions": [
+        {
+          "id": "start_replay",
+          "requires_approval": true,
+          "command": [
+            "ssh",
+            "root@192.168.50.13",
+            "infer-mesh-apply replay-mobility-profile mobility-low-rssi.json"
+          ]
+        }
+      ],
+      "end_interventions": [
+        {
+          "id": "stop_replay",
+          "requires_approval": true,
+          "command": [
+            "ssh",
+            "root@192.168.50.13",
+            "infer-mesh-apply stop-replay"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "recovery",
+      "duration_s": 300
+    }
+  ]
+}
+

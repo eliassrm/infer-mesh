@@ -1,0 +1,5 @@
+skip_list:
+  # OpenWrt targets often lack Python, so bootstrap/package tasks intentionally use raw.
+  - command-instead-of-module
+  - no-changed-when
+

@@ -1,0 +1,108 @@
+{
+  "experiment_id": "packet-loss-recovery-001",
+  "scenario": "packet_loss_recovery",
+  "policy_mode": "adaptive",
+  "topology_revision": "lab-topology-v1",
+  "operator": "controller",
+  "expected_interval_s": 5,
+  "allowed_interventions": [
+    "start_loss_shape",
+    "clear_loss_shape"
+  ],
+  "allowed_policy_actions": [
+    "keep_state",
+    "reduce_test_load",
+    "prefer_stronger_path",
+    "restore_defaults"
+  ],
+  "safety": {
+    "approval_token": "REPLACE_WITH_RUN_APPROVAL_TOKEN"
+  },
+  "collectors": [
+    {
+      "name": "latency",
+      "command": [
+        "python",
+        "scripts/latency_probe.py",
+        "--node-id",
+        "controller",
+        "--target",
+        "10.10.0.12",
+        "--ping-style",
+        "windows",
+        "--format",
+        "json"
+      ]
+    }
+  ],
+  "policy": {
+    "window_s": 60,
+    "targets": {
+      "packet_loss": 0.05,
+      "latency_ms": 50,
+      "throughput_mbps": 10,
+      "batman_tq": 150
+    }
+  },
+  "policy_actions": [
+    {
+      "id": "reduce_test_load",
+      "requires_approval": false
+    },
+    {
+      "id": "prefer_stronger_path",
+      "requires_approval": true,
+      "command": [
+        "ssh",
+        "root@192.168.50.20",
+        "infer-mesh-apply prefer-stronger-path"
+      ]
+    },
+    {
+      "id": "restore_defaults",
+      "requires_approval": true,
+      "command": [
+        "ssh",
+        "root@192.168.50.20",
+        "infer-mesh-apply restore-defaults"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "label": "baseline",
+      "duration_s": 300
+    },
+    {
+      "label": "degradation",
+      "duration_s": 180,
+      "interventions": [
+        {
+          "id": "start_loss_shape",
+          "requires_approval": true,
+          "command": [
+            "ssh",
+            "root@192.168.50.13",
+            "tc qdisc replace dev bat0 root netem loss 10%"
+          ]
+        }
+      ],
+      "end_interventions": [
+        {
+          "id": "clear_loss_shape",
+          "requires_approval": true,
+          "command": [
+            "ssh",
+            "root@192.168.50.13",
+            "tc qdisc del dev bat0 root"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "recovery",
+      "duration_s": 300
+    }
+  ]
+}
+

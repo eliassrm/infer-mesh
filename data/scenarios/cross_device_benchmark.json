@@ -1,0 +1,60 @@
+{
+  "experiment_id": "cross-device-benchmark-001",
+  "scenario": "cross_device_benchmark",
+  "policy_mode": "static",
+  "topology_revision": "lab-topology-v1",
+  "operator": "controller",
+  "expected_interval_s": 5,
+  "nodes": [
+    "shg3060",
+    "shg3000",
+    "tl-wr841nd"
+  ],
+  "collectors": [
+    {
+      "name": "latency-shg3000",
+      "command": [
+        "python",
+        "scripts/latency_probe.py",
+        "--node-id",
+        "controller",
+        "--target",
+        "10.10.0.12",
+        "--ping-style",
+        "windows",
+        "--format",
+        "json"
+      ]
+    },
+    {
+      "name": "latency-tl-wr841nd",
+      "command": [
+        "python",
+        "scripts/latency_probe.py",
+        "--node-id",
+        "controller",
+        "--target",
+        "10.10.0.14",
+        "--ping-style",
+        "windows",
+        "--format",
+        "json"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "label": "baseline",
+      "duration_s": 600
+    },
+    {
+      "label": "degradation",
+      "duration_s": 0
+    },
+    {
+      "label": "recovery",
+      "duration_s": 0
+    }
+  ]
+}
+

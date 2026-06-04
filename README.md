@@ -60,7 +60,7 @@ minimize expected uncertainty under degraded network conditions?
 |---|---|
 | `docs/` | Architecture, experimental method, model, risks, and reporting template |
 | `ansible/` | Starter inventory and OpenWrt/telemetry provisioning playbooks |
-| `scripts/` | Standalone metric collectors and experiment utilities |
+| `scripts/` | Standalone metric collectors, ingestion, policy, orchestration, and analysis utilities |
 | `data/` | Example experiment record format |
 | `notebooks/` | Analysis starting point for resilience metrics |
 | `diagrams/` | Editable topology diagram |
@@ -86,7 +86,35 @@ minimize expected uncertainty under degraded network conditions?
    python3 scripts/iperf_sweep.py --node-id shg3060 --server 192.168.50.20
    ```
 
-5. Use `data/sample_experiment.csv` and
+5. Ingest collector output into a run-level dataset with metadata, validation, quality checks,
+   and optional HMAC signing:
+
+   ```bash
+   python3 scripts/telemetry_ingest.py \
+     --metadata data/run-metadata.example.json \
+     --input data/sample_experiment.csv \
+     --output-dir data/runs
+   ```
+
+6. Run a controller scenario in dry-run mode first. Add `--execute` and a matching
+   `--approval-token` only for reviewed lab actions:
+
+   ```bash
+   python3 scripts/experiment_orchestrator.py \
+     --scenario data/scenarios/packet_loss_recovery.json \
+     --output-dir data/runs
+   ```
+
+7. Generate a paired static/adaptive report:
+
+   ```bash
+   python3 scripts/paired_analysis.py \
+     --static data/sample_experiment.csv \
+     --adaptive data/sample_experiment.csv \
+     --output docs/results-template.md
+   ```
+
+8. Use `data/sample_experiment.csv` and
    `notebooks/mesh_resilience_analysis.ipynb` as the starting analysis contract.
 
 ## Safety Boundary
@@ -97,4 +125,5 @@ project threat and safety assumptions are documented in `docs/threat-model.md`.
 
 ## Status
 
-Initial topology design, provisioning scaffold, and telemetry instrumentation.
+Initial topology design, provisioning scaffold, telemetry instrumentation, adaptive policy
+scoring, experiment orchestration, ingestion, quality checks, and paired-run reporting.

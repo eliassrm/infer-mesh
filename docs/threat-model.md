@@ -17,6 +17,8 @@
 | Wireless mesh medium | Uncontrolled interference or observation | Isolated tests, record background conditions, avoid sensitive data |
 | Experiment policy to network | Excessive/disruptive actions | Bounded actions, rollback access, action logs |
 | Storage/export pipeline | Data loss or silent alteration | Raw retention, access controls, checksums/backups |
+| Telemetry ingest | Spoofed or altered records | Optional HMAC signing and signature verification |
+| Degradation controls | Unreviewed disruptive commands | Dry-run default, action allowlists, approval tokens |
 
 ## Failure and Adversary Cases
 
@@ -39,6 +41,8 @@
 - Treat ISP-supplied firmware extraction and flashing according to applicable ownership,
   contract, and device-support constraints.
 - Exclude personal or third-party network payload data from captures and stored results.
+- Keep orchestrator scenarios in dry-run mode until commands and approval tokens have been
+  reviewed for the specific lab topology.
 
 ## Out of Scope
 

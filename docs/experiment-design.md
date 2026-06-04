@@ -39,6 +39,12 @@ each paired comparison.
 6. Export raw records before cleaning or aggregating them.
 7. Reset configuration and repeat sufficiently to estimate variation between runs.
 
+The controller implementation is `scripts/experiment_orchestrator.py`. Scenario definitions live
+under `data/scenarios/` and cover packet-loss recovery, multi-hop scaling, mobility/interference
+replay, and cross-device benchmarking. The orchestrator is dry-run by default and records
+controller events in `events.jsonl`, command attempts in `commands.jsonl`, and wrapped collector
+records in `telemetry.jsonl`.
+
 ## Event Labels
 
 Use stable event labels in collected records:
@@ -51,6 +57,10 @@ Use stable event labels in collected records:
 | `adaptation` | Policy action applied |
 | `failure` | Unplanned outage or invalid test condition |
 
+Controller-generated event labels also include `phase_start`, `phase_end`, and
+`policy_decision`. Route churn collectors may emit `route_new`, `route_lost`, and
+`route_change`.
+
 ## Controlled Actions
 
 Adaptive experiments should initially select only reversible actions:
@@ -62,6 +72,10 @@ Adaptive experiments should initially select only reversible actions:
 | Reduce offered test load | Within isolated network |
 | Change channel or transmit setting | Regulatory and device limits apply |
 | Withdraw/rejoin a designated node | Recovery access retained |
+
+Guarded degradation actions can be applied with `ansible/degradation-actions.yml`. The playbook
+requires `experiment_id` and a matching `degradation_confirm` value, limits packet loss to
+1-30 percent, and supports only `inspect`, `start_loss`, and `clear_loss`.
 
 ## Validity Controls
 

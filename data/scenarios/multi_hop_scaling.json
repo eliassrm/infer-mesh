@@ -1,0 +1,84 @@
+{
+  "experiment_id": "multi-hop-scaling-001",
+  "scenario": "multi_hop_scaling",
+  "policy_mode": "static",
+  "topology_revision": "lab-topology-v1",
+  "operator": "controller",
+  "expected_interval_s": 5,
+  "allowed_interventions": [
+    "pin_three_hop_path",
+    "restore_defaults"
+  ],
+  "safety": {
+    "approval_token": "REPLACE_WITH_RUN_APPROVAL_TOKEN"
+  },
+  "collectors": [
+    {
+      "name": "latency",
+      "command": [
+        "python",
+        "scripts/latency_probe.py",
+        "--node-id",
+        "controller",
+        "--target",
+        "10.10.0.14",
+        "--ping-style",
+        "windows",
+        "--format",
+        "json"
+      ]
+    },
+    {
+      "name": "throughput",
+      "command": [
+        "python",
+        "scripts/iperf_sweep.py",
+        "--node-id",
+        "controller",
+        "--server",
+        "10.10.0.14",
+        "--duration",
+        "5",
+        "--format",
+        "json"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "label": "baseline",
+      "duration_s": 300
+    },
+    {
+      "label": "degradation",
+      "duration_s": 300,
+      "interventions": [
+        {
+          "id": "pin_three_hop_path",
+          "requires_approval": true,
+          "command": [
+            "ssh",
+            "root@192.168.50.20",
+            "infer-mesh-apply pin-three-hop-path"
+          ]
+        }
+      ],
+      "end_interventions": [
+        {
+          "id": "restore_defaults",
+          "requires_approval": true,
+          "command": [
+            "ssh",
+            "root@192.168.50.20",
+            "infer-mesh-apply restore-defaults"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "recovery",
+      "duration_s": 300
+    }
+  ]
+}
+

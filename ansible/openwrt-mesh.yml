@@ -18,6 +18,8 @@
           - bat_ip is defined
           - mesh_key is defined
           - mesh_key | default('') | length >= 16
+          - "'REPLACE' not in mesh_key"
+          - mesh_key | lower not in ['changemechangeme', 'passwordpassword']
         fail_msg: >-
           Set a verified radio identifier and provide a mesh_key of at least
           16 characters, preferably through Ansible Vault or --extra-vars.
@@ -70,6 +72,7 @@
 
         uci commit wireless
         uci commit network
+      no_log: true
       notify: Reload OpenWrt network
 
   handlers:
