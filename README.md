@@ -1,5 +1,6 @@
 # INFER-MESH
 
+<!-- git check -->
 Active-inference testbed for resilient OpenWrt mesh networks using reclaimed ISP CPE routers.
 
 ## Objective
