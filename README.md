@@ -128,3 +128,6 @@ project threat and safety assumptions are documented in `docs/threat-model.md`.
 
 Initial topology design, provisioning scaffold, telemetry instrumentation, adaptive policy
 scoring, experiment orchestration, ingestion, quality checks, and paired-run reporting.
+
+## Future
+
